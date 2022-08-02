@@ -25,23 +25,23 @@ class KartonAnalysisResource(Resource):
 
         if analysis is None:
             return {"status": "finished"}, 200
-        else:
-            queues = {
-                queue_name: {
-                    "received_from": list(set(
-                        task.headers["origin"] for task in queue.pending_tasks
-                    )),
-                    "status": list(set(
-                        task.status.value for task in queue.pending_tasks
-                    ))
-                }
-                for queue_name, queue in analysis.pending_queues.items()
+        queues = {
+            queue_name: {
+                "received_from": list(
+                    {task.headers["origin"] for task in queue.pending_tasks}
+                ),
+                "status": list(
+                    {task.status.value for task in queue.pending_tasks}
+                ),
             }
-            return {
-                "status": "running",
-                "last_update": analysis.last_update,
-                "processing_in": queues
-            }, 200
+            for queue_name, queue in analysis.pending_queues.items()
+        }
+
+        return {
+            "status": "running",
+            "last_update": analysis.last_update,
+            "processing_in": queues
+        }, 200
 
     @requires_authorization
     @requires_capabilities(KartonCapabilities.karton_manage)
